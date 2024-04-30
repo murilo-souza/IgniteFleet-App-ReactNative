@@ -20,7 +20,7 @@ export function HomeHeader() {
         placeholder="L184i9offQof00ayfQay~qj[fQj["
       />
       <Greeting>
-        <Message>Olá</Message>
+        <Message>Olá,</Message>
         <Name>{user?.profile.name}</Name>
       </Greeting>
       <TouchableOpacity onPress={handleLogout} activeOpacity={0.7}>
