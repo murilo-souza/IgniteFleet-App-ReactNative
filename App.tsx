@@ -1,5 +1,5 @@
 /* eslint-disable camelcase */
-
+import './src/libs/dayjs'
 import 'react-native-get-random-values'
 import { ThemeProvider } from 'styled-components/native'
 import { SignIn } from './src/screens/sign-in'
