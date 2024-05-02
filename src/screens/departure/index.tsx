@@ -4,21 +4,13 @@ import { Header } from '../../components/header'
 import { LicensePlateInput } from '../../components/license-plate-input'
 import { TextAreaInput } from '../../components/text-area-input'
 import { Button } from '../../components/button'
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  TextInput,
-} from 'react-native'
+import { Alert, ScrollView, TextInput } from 'react-native'
 import { licensePlateValidate } from '../../utils/license-plate-validate'
 import { useRealm } from '../../libs/realm'
 import { Historic } from '../../libs/realm/schemas/historic'
 import { useUser } from '@realm/react'
 import { useNavigation } from '@react-navigation/native'
-
-const keyboardAvoidingViewBehavior =
-  Platform.OS === 'android' ? 'height' : 'position'
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view'
 
 export function Departure() {
   const [description, setDescription] = useState('')
@@ -77,10 +69,7 @@ export function Departure() {
     <Container>
       <Header title="Sáida" />
 
-      <KeyboardAvoidingView
-        behavior={keyboardAvoidingViewBehavior}
-        style={{ flex: 1 }}
-      >
+      <KeyboardAwareScrollView>
         <ScrollView>
           <Content>
             <LicensePlateInput
@@ -109,7 +98,7 @@ export function Departure() {
             />
           </Content>
         </ScrollView>
-      </KeyboardAvoidingView>
+      </KeyboardAwareScrollView>
     </Container>
   )
 }
