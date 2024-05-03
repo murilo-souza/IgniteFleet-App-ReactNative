@@ -8,6 +8,7 @@ import { Historic } from '../../libs/realm/schemas/historic'
 import { Alert, FlatList } from 'react-native'
 import { HistoricCard, HistoricCardProps } from '../../components/historic-card'
 import dayjs from 'dayjs'
+import { useUser } from '@realm/react'
 
 export function Home() {
   const [vehicleInUse, setVehicleInUse] = useState<Historic | null>(null)
@@ -16,7 +17,6 @@ export function Home() {
   )
 
   const { navigate } = useNavigation()
-  const realm = useRealm()
 
   function handleRegisterMovement() {
     if (vehicleInUse?._id) {
@@ -26,7 +26,9 @@ export function Home() {
     }
   }
 
+  const realm = useRealm()
   const historic = useQuery(Historic)
+  const user = useUser()
 
   function fetchVehiclesInUse() {
     try {
@@ -86,6 +88,16 @@ export function Home() {
   useEffect(() => {
     fetchHistoric()
   }, [historic])
+
+  useEffect(() => {
+    realm.subscriptions.update((mutableSubs, realm) => {
+      const historicByUserQuery = realm
+        .objects('Historic')
+        .filtered(`user_id = '${user!.id}'`)
+
+      mutableSubs.add(historicByUserQuery, { name: 'historic_by_user' })
+    })
+  }, [realm])
 
   return (
     <Container>
