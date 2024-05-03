@@ -1,5 +1,6 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import {
+  AsyncMessage,
   Container,
   Content,
   Description,
@@ -16,12 +17,15 @@ import { useObject, useRealm } from '../../libs/realm'
 import { Historic } from '../../libs/realm/schemas/historic'
 import { BSON } from 'realm'
 import { Alert } from 'react-native'
+import { getLastAsyncTimestamp } from '../../libs/async-storage/sync-storage'
 
 type RouteParamsProps = {
   id: string
 }
 
 export function Arrival() {
+  const [dataNotSynced, setDataNotSynced] = useState(false)
+
   const route = useRoute()
   const { id } = route.params as RouteParamsProps
 
@@ -71,6 +75,12 @@ export function Arrival() {
     }
   }
 
+  useEffect(() => {
+    getLastAsyncTimestamp().then((lastSync) =>
+      setDataNotSynced(historic!.updated_at.getTime() > lastSync),
+    )
+  }, [])
+
   return (
     <Container>
       <Header title={title} />
@@ -87,6 +97,13 @@ export function Arrival() {
           <ButtonIcon icon={X} onPress={handleRemoveVehicleUsage} />
           <Button title="Registrar chegada" onPress={handleRegisterArrival} />
         </Footer>
+      )}
+
+      {dataNotSynced && (
+        <AsyncMessage>
+          Sincronização da{' '}
+          {historic?.status === 'departure' ? 'partida' : 'chegada'} pendente
+        </AsyncMessage>
       )}
     </Container>
   )
