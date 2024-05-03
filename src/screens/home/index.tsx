@@ -8,7 +8,11 @@ import { Historic } from '../../libs/realm/schemas/historic'
 import { Alert, FlatList } from 'react-native'
 import { HistoricCard, HistoricCardProps } from '../../components/historic-card'
 import dayjs from 'dayjs'
-import { useUser } from '@realm/react'
+import { useUser, Realm } from '@realm/react'
+import {
+  getLastAsyncTimestamp,
+  saveLastSyncTimestamp,
+} from '../../libs/async-storage/sync-storage'
 
 export function Home() {
   const [vehicleInUse, setVehicleInUse] = useState<Historic | null>(null)
@@ -44,16 +48,19 @@ export function Home() {
     }
   }
 
-  function fetchHistoric() {
+  async function fetchHistoric() {
     try {
       const response = historic.filtered(
         "status = 'arrival' SORT(created_at DESC)",
       )
+
+      const lastSync = await getLastAsyncTimestamp()
+
       const formattedHistoric = response.map((item) => {
         return {
           id: item._id.toString(),
           licensePlate: item.license_plate,
-          isSync: false,
+          isSync: lastSync > item.updated_at!.getTime(),
           created: dayjs(item.created_at).format(
             '[Saída em] DD/MM/YYYY [às] HH:mm',
           ),
@@ -69,6 +76,18 @@ export function Home() {
 
   function handleHistoricDetails(id: string) {
     navigate('arrival', { id })
+  }
+
+  async function progressNotification(
+    transferred: number,
+    transferable: number,
+  ) {
+    const percentage = (transferred / transferable) * 100
+
+    if (percentage === 100) {
+      await saveLastSyncTimestamp()
+      fetchHistoric()
+    }
   }
 
   useEffect(() => {
@@ -99,6 +118,22 @@ export function Home() {
     })
   }, [realm])
 
+  useEffect(() => {
+    const syncSession = realm.syncSession
+
+    if (!syncSession) {
+      // eslint-disable-next-line no-useless-return
+      return
+    }
+
+    syncSession.addProgressNotification(
+      Realm.ProgressDirection.Upload,
+      Realm.ProgressMode.ReportIndefinitely,
+      progressNotification,
+    )
+
+    return () => syncSession.removeProgressNotification(progressNotification)
+  }, [])
   return (
     <Container>
       <HomeHeader />
